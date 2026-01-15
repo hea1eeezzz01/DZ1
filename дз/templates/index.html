@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дерево отрезков - Segment Tree Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .array-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .array-input input {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .updates-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .update-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .update-item input {
+            flex: 1;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .cache-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+
+        .cache-true {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .cache-false {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌳 Дерево отрезков</h1>
+        <p class="subtitle">Segment Tree Calculator с операциями OR и XOR</p>
+
+        <form id="segmentTreeForm">
+            <div class="form-group">
+                <label for="n">Степень двойки (n):</label>
+                <input type="number" id="n" min="0" max="10" value="2" required>
+                <p class="info-text">Размер массива будет 2^n элементов</p>
+            </div>
+
+            <div class="form-group">
+                <label for="array">Массив данных (через запятую или пробел):</label>
+                <input type="text" id="array" placeholder="1, 2, 3, 4" required>
+                <p class="info-text">Введите 2^n чисел</p>
+            </div>
+
+            <div class="updates-section">
+                <label>Обновления (опционально):</label>
+                <div id="updatesContainer">
+                    <div class="update-item">
+                        <input type="number" placeholder="Позиция (p)" min="1" class="update-p">
+                        <input type="number" placeholder="Значение (b)" class="update-b">
+                        <button type="button" class="btn-secondary" onclick="removeUpdate(this)">Удалить</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" onclick="addUpdate()">+ Добавить обновление</button>
+            </div>
+
+            <button type="submit" style="width: 100%; margin-top: 20px;">Вычислить</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Вычисление...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="result-item">
+                <div class="result-label">
+                    Начальный результат
+                    <span class="cache-indicator" id="cacheIndicator"></span>
+                </div>
+                <div class="result-value" id="initialResult"></div>
+            </div>
+            <div class="result-item" id="updatesResult" style="display: none;">
+                <div class="result-label">Результаты обновлений:</div>
+                <div id="updateResultsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/calculate/';
+
+        function addUpdate() {
+            const container = document.getElementById('updatesContainer');
+            const updateItem = document.createElement('div');
+            updateItem.className = 'update-item';
+            updateItem.innerHTML = `
+                <input type="number" placeholder="Позиция (p)" min="1" class="update-p">
+                <input type="number" placeholder="Значение (b)" class="update-b">
+                <button type="button" class="btn-secondary" onclick="removeUpdate(this)">Удалить</button>
+            `;
+            container.appendChild(updateItem);
+        }
+
+        function removeUpdate(button) {
+            const container = document.getElementById('updatesContainer');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            } else {
+                alert('Должен остаться хотя бы один элемент обновления');
+            }
+        }
+
+        function parseArray(input) {
+            return input.split(/[,\s]+/).filter(x => x).map(x => parseInt(x.trim()));
+        }
+
+        document.getElementById('segmentTreeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const n = parseInt(document.getElementById('n').value);
+            const arrayInput = document.getElementById('array').value;
+            const array = parseArray(arrayInput);
+
+            const expectedLength = Math.pow(2, n);
+            if (array.length !== expectedLength) {
+                showError(`Ошибка: массив должен содержать ${expectedLength} элементов (2^${n}), получено ${array.length}`);
+                return;
+            }
+
+            // Собираем обновления
+            const updates = [];
+            const updateItems = document.querySelectorAll('.update-item');
+            updateItems.forEach(item => {
+                const p = parseInt(item.querySelector('.update-p').value);
+                const b = parseInt(item.querySelector('.update-b').value);
+                if (p && !isNaN(b)) {
+                    updates.push({ p, b });
+                }
+            });
+
+            const requestData = {
+                n: n,
+                array: array,
+                updates: updates
+            };
+
+            // Показываем загрузку
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('results').classList.remove('show');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || JSON.stringify(data));
+                }
+
+                // Показываем результаты
+                document.getElementById('initialResult').textContent = data.initial_result;
+                
+                const cacheIndicator = document.getElementById('cacheIndicator');
+                if (data.from_cache) {
+                    cacheIndicator.textContent = 'Из кэша';
+                    cacheIndicator.className = 'cache-indicator cache-true';
+                } else {
+                    cacheIndicator.textContent = 'Вычислено';
+                    cacheIndicator.className = 'cache-indicator cache-false';
+                }
+
+                if (data.update_results && data.update_results.length > 0) {
+                    const updatesResult = document.getElementById('updatesResult');
+                    const updateResultsList = document.getElementById('updateResultsList');
+                    updateResultsList.innerHTML = '';
+                    data.update_results.forEach((result, index) => {
+                        const div = document.createElement('div');
+                        div.style.marginTop = '10px';
+                        div.innerHTML = `<strong>Обновление ${index + 1}:</strong> ${result}`;
+                        updateResultsList.appendChild(div);
+                    });
+                    updatesResult.style.display = 'block';
+                } else {
+                    document.getElementById('updatesResult').style.display = 'none';
+                }
+
+                document.getElementById('results').classList.add('show');
+
+            } catch (error) {
+                showError('Ошибка: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        // Автоматически обновляем массив при изменении n
+        document.getElementById('n').addEventListener('change', function() {
+            const n = parseInt(this.value);
+            const expectedLength = Math.pow(2, n);
+            const arrayInput = document.getElementById('array');
+            const currentArray = parseArray(arrayInput.value);
+            
+            if (currentArray.length !== expectedLength) {
+                // Генерируем пример массива
+                const exampleArray = Array.from({ length: expectedLength }, (_, i) => i + 1);
+                arrayInput.value = exampleArray.join(', ');
+                arrayInput.placeholder = `Введите ${expectedLength} чисел`;
+            }
+        });
+
+        // Инициализация при загрузке
+        document.getElementById('n').dispatchEvent(new Event('change'));
+    </script>
+</body>
+</html>
